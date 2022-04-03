@@ -38,5 +38,18 @@ public class PersonServiceImpl implements PersonService {
     public void delete(Person person) {
         personRepo.delete(person);
     }
+
+    public void updatePerson(Person updatePerson, Person found){
+        found.setFirstName(updatePerson.getFirstName());
+        found.setLastName(updatePerson.getLastName());
+        found.setHiringDate(updatePerson.getHiringDate());
+        found.setPassword(updatePerson.getPassword());
+        found.setUsername(updatePerson.getUsername());
+        found.setNewPassword(updatePerson.getNewPassword());
+        found.setCreatedAt(updatePerson.getCreatedAt());
+        found.setModifiedAt(updatePerson.getModifiedAt());
+        found.setVersion(updatePerson.getVersion());
+        personRepo.save(found);
+    }
 }
 

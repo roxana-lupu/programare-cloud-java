@@ -1,14 +1,15 @@
 package com.eureka.persons;
 
+import com.eureka.persons.ex.NotFoundException;
 import com.eureka.persons.person.Person;
 import com.eureka.persons.services.PersonService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/persons")
@@ -26,7 +27,9 @@ public class PersonsController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Person> list() {
-        return new ArrayList<>();
+        List<Person> all=personService.findAll();
+        Collections.sort(all, Comparator.comparing(Person::getId));
+        return all;
     }
 
     /**
@@ -36,6 +39,12 @@ public class PersonsController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public void create(@RequestBody Person person, BindingResult result) {
+           if(result.hasErrors()){
+               throw new PersonsException(HttpStatus.INTERNAL_SERVER_ERROR, "Error!");
+           }
+           else {
+               personService.save(person);
+           }
     }
 
     /**
@@ -47,8 +56,14 @@ public class PersonsController {
     //TODO find a person by id or throw NotFoundException
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Person show(@PathVariable Long id) {
-        return new Person();
+    public Object show(@PathVariable Long id) {
+        Optional<Person> person=personService.findById(id);
+        if(person.isPresent()){
+            return person;
+        }
+        else {
+            throw new NotFoundException(Person.class, id);
+        }
     }
 
     /**
@@ -62,6 +77,13 @@ public class PersonsController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{id}")
     public void update(@RequestBody Person updatedPerson, @PathVariable Long id) {
+        Optional<Person> person=personService.findById(id);
+        person.ifPresent(person1 -> {
+            personService.updatePerson(updatedPerson, person1);
+        });
+        if(!person.isPresent()){
+            throw new NotFoundException(Person.class, id);
+        }
     }
 
     /**
@@ -73,5 +95,10 @@ public class PersonsController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
+        Optional<Person> person=personService.findById(id);
+        person.ifPresent(thePerson ->personService.delete(thePerson));
+        if(!person.isPresent()){
+            throw new NotFoundException(Person.class, id);
+        }
     }
 }
