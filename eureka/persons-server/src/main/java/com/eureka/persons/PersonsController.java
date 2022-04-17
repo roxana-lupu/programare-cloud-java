@@ -97,7 +97,7 @@ public class PersonsController {
     public void delete(@PathVariable Long id) {
         Optional<Person> person=personService.findById(id);
         person.ifPresent(thePerson ->personService.delete(thePerson));
-        if(!person.isPresent()){
+        if(person.isEmpty()){
             throw new NotFoundException(Person.class, id);
         }
     }
